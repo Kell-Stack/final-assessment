@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {Jumbotron} from 'react-bootstrap';
+import {Jumbotron, Button} from 'react-bootstrap';
 import './App.css';
 
 const API = '/getall/'
@@ -14,44 +14,74 @@ const Header = (props) => {
   )
 }
 
+function simulateNetworkRequest() {
+  return new Promise(resolve => setTimeout(resolve, 200));
+}
+
 const DataListItem = (props) => {
+  const { isLoading }= false
   return(
-    <li>
-      <span className="name">Name: {props.name}</span>
-      <span className="grade">Grade: {props.grade}</span>
-    </li>
+    <div className="ud-buttons">
+      <li>
+        <span className="name">Name: {props.name}</span>
+        <span className="grade">Grade: {props.grade}</span>
+      </li>
+          <Button
+          onClick={() => props.removeStudent(props.id)}
+          disabled={isLoading}
+
+          >
+          {isLoading ? "✖" : "✖✖✖✖✖✖"}
+          </Button>
+    </div>
   )
 };
 
 class AddListItem extends React.Component {
-  constructor(props){
-    super(props);
-    this.state = {
+    constructor(props) {
+      super(props);
+      this.state = {
         name: "",
         grade: ""
+      }
+      this.handleNameChange = this.handleNameChange.bind(this)
+      this.handleGradeChange = this.handleGradeChange.bind(this)
+      this.handleSubmit = this.handleSubmit.bind(this)
     }
-    this.handleNameChange = this.handleNameChange.bind(this)
-    this.handleGradeChange = this.handleGradeChange.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
-  }
 
-  handleNameChange = (e) => {
-    // console.log(this.state.name)
-    this.setState ({name: e.target.value})
-  }
+    handleNameChange = (e) => {
+      // console.log(this.state.name)
+      this.setState({
+        name: e.target.value
+      })
+    }
 
-  handleGradeChange = (e) => {
-    this.setState ({grade: e.target.value})
-  }
+    handleGradeChange = (e) => {
+      this.setState({
+        grade: e.target.value
+      })
+    }
 
-  handleSubmit = (e) => {
-    e.preventDefault();
+    handleSubmit = (e) => {
+      e.preventDefault();
 
-    this.props.addStudent(
-      this.state.name,
-      this.state.grade
-    )
-  }
+      this.props.addStudent(
+        this.state.name,
+        this.state.grade
+      )
+    }
+
+
+
+    handleClick() {
+      this.setState({ isLoading: true }, () => {
+        simulateNetworkRequest().then(() => {
+          this.setState({ isLoading: false });
+        });
+      });
+    }
+
+
 
   render(){
     return (
@@ -79,8 +109,8 @@ class App extends Component {
     this.state = {
       example: [],
       allInfo: [],
-      }
-    };
+    }
+  };
 
   addInfo = (name, grade) => {
     console.log(name)
@@ -88,50 +118,58 @@ class App extends Component {
       name,
       grade
     }
-    let id = null
+    const id = null
 
-   fetch('/getall/', {
-      method: 'post',
-      headers: ({'Content-Type':'application/json'}),
-      body: JSON.stringify(body)
-    })
-    .then(resp => {
-      if (!resp.ok) {
-        if (resp.status >= 400 && resp.status < 500) {
-          return resp.json().then(data => {
-            let err = { errorMessage: data.message };
-            throw err;
-          })
-        } else {
-          let err = { errorMessage: 'Sorry girl, the server is not responding. Unable to Add Info' };
-          throw err;
-        }
-      }
-      // console.log('resp.json', resp.json());
-      return resp.json();
-    })
-    .then (
-      data => {
-        console.log(data,"heyyyyyyyyy kelly");
+    fetch('/getall/', {
+        method: 'post',
+        headers: ({
+          'Content-Type': 'application/json'
+        }),
+        body: JSON.stringify(body)
       })
-
-    this.setState ({
-        allInfo: [
-          ...this.state.allInfo,
-          {
-            id: id,
-            name: name,
-            grade: grade
+      .then(resp => {
+        if (!resp.ok) {
+          if (resp.status >= 400 && resp.status < 500) {
+            return resp.json().then(data => {
+              let err = {
+                errorMessage: data.message
+              };
+              throw err;
+            })
+          } else {
+            let err = {
+              errorMessage: 'Sorry girl, the server is not responding. Unable to Add Info'
+            };
+            throw err;
           }
-        ]
+        }
+        // console.log('resp.json', resp.json());
+        return resp.json();
+      })
+      .then(
+        data => {
+          console.log(data, "heyyyyyyyyy kelly");
+        })
+
+    this.setState({
+      allInfo: [
+        ...this.state.allInfo,
+        {
+          id: id,
+          name: name,
+          grade: grade
+        }
+      ]
     })
-    }
+  }
 
 
   loadAll() {
     fetch(API, {
-      headers: {"content-type": "application/json"}
-    })
+        headers: {
+          "content-type": "application/json"
+        }
+      })
       .then(resp => {
         if (!resp.ok) {
           if (resp.status >= 400 && resp.status < 500) {
@@ -152,13 +190,61 @@ class App extends Component {
       })
 
       .then(allInfo => {
-        this.setState({allInfo: allInfo})
+        this.setState({
+          allInfo: allInfo
+        })
       });
   }
 
   componentDidMount() {
     this.loadAll();
   }
+
+  removeInfo = (id) => {
+    let delInf = API + id;
+    console.log( "ctrl alt del ctrl alt del ESCAPE ESCAPE 🍕", delInf)
+
+    fetch(delInf, {
+        method: 'delete',
+        headers: {"content-type": "application/json"}
+      })
+      .then(resp => {
+        if (!resp.ok) {
+          if (resp.status >= 400 && resp.status < 500) {
+            return resp.json().then(data => {
+              let err = {
+
+                errorMessage: data.message
+              };
+              throw err;
+            })
+          } else {
+            let err = {
+              errorMessage: 'Sorry girl, the server is not responding. Unable to REMOVE info'
+            };
+            throw err;
+          }
+        }
+        return resp.json();
+      })
+      .catch(() => {
+        console.log('failed to fetch💯')
+      })
+      .then(() => {
+
+        let searchAndDelete = this.state.allInfo.filter(infoo => infoo.id !== id)
+        console.log(searchAndDelete, "🇨🇩")
+        this.setState(
+          {
+            allInfo: searchAndDelete
+        });
+      });
+  };
+
+
+  // componentWillMount() {
+  //   this.removeInfo();
+  // }
 
   render() {
     return (
@@ -176,8 +262,10 @@ class App extends Component {
                 return(
                   <DataListItem
                     key={info.id}
+                    id={info.id}
                     name={info.name}
                     grade={info.grade}
+                    removeStudent={this.removeInfo}
                   />
                 )
               })
