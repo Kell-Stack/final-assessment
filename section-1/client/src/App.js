@@ -33,6 +33,13 @@ const DataListItem = (props) => {
           >
           {isLoading ? "✖" : "✖✖✖✖✖✖"}
           </Button>
+          <Button
+          onClick={() => props.editStudent(props.id)}
+          disabled={isLoading}
+
+          >
+          {isLoading ? "✏️" : "📝"}
+          </Button>
     </div>
   )
 };
@@ -46,7 +53,14 @@ class AddListItem extends React.Component {
       }
       this.handleNameChange = this.handleNameChange.bind(this)
       this.handleGradeChange = this.handleGradeChange.bind(this)
+      this.handleEdit = this.handleEdit.bind(this)
       this.handleSubmit = this.handleSubmit.bind(this)
+    }
+
+    componentDidUpdate(prevProps){
+      if (prevProps.selectStudent !== this.props.selectStudent){
+        this.setState({...this.props.selectStudent})
+      }
     }
 
     handleNameChange = (e) => {
@@ -65,13 +79,22 @@ class AddListItem extends React.Component {
     handleSubmit = (e) => {
       e.preventDefault();
 
-      this.props.addStudent(
-        this.state.name,
-        this.state.grade
-      )
+      if (this.state.id ) {
+      this.props.editStudentInfo(
+        this.state.id, this.state.name, this.state.grade)
+
+      } else {
+        this.props.addStudent(
+          this.state.name,
+          this.state.grade
+        )
+      }
+      this.setState ({id:null, name:"", grade:""} )
     }
 
-
+    handleEdit = () => {
+      this.props.editStudentInfo(this.state.id, this.state.name, this.state.grade)
+  }
 
     handleClick() {
       this.setState({ isLoading: true }, () => {
@@ -90,12 +113,14 @@ class AddListItem extends React.Component {
           Name:
           <input value={this.state.name} onChange={this.handleNameChange} />
         </label>
+
         <label>
           Grade:
           <input value={this.state.grade} onChange={this.handleGradeChange} />
         </label>
+
         <input type="submit" value="Submit" />
-    </form>
+      </form>
     )
 
   }
@@ -109,6 +134,7 @@ class App extends Component {
     this.state = {
       example: [],
       allInfo: [],
+      selectStudent: null
     }
   };
 
@@ -139,7 +165,7 @@ class App extends Component {
             })
           } else {
             let err = {
-              errorMessage: 'Sorry girl, the server is not responding. Unable to Add Info'
+              errorMessage: 'Be sure you are adding CHARACTERS in the Name field and NUMBERS in the Grade field'
             };
             throw err;
           }
@@ -201,6 +227,48 @@ class App extends Component {
     this.loadAll();
   }
 
+  editInfo = (id,name,grade) => {
+      let updateInf = API + id;
+      console.log("✏️update ✏️", updateInf)
+
+      fetch(updateInf, {
+          method: 'put',
+          headers: {
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({name, grade})
+        })
+        .then(resp => {
+          if (!resp.ok) {
+            if (resp.status >= 400 && resp.status < 500) {
+              return resp.json().then(data => {
+                let err = {
+
+                  errorMessage: data.message
+                };
+                throw err;
+              })
+            } else {
+              let err = {
+                errorMessage: 'Sorry girl, the server is not responding. Unable to EDIT info✏️'
+              };
+              throw err;
+            }
+          }
+          return resp.json();
+        })
+        .then((updatedInfo) => {
+          let update = this.state.allInfo.filter(updateby => updateby.id !== id)
+          console.log(update, "🔐")
+          this.setState({
+            allInfo: [...update, updatedInfo]
+          });
+        })
+        .catch(() => {
+          console.log('📍failed to fetch')
+        })
+      }
+
   removeInfo = (id) => {
     let delInf = API + id;
     console.log( "ctrl alt del ctrl alt del ESCAPE ESCAPE 🍕", delInf)
@@ -232,7 +300,6 @@ class App extends Component {
         console.log('failed to fetch💯')
       })
       .then(() => {
-
         let searchAndDelete = this.state.allInfo.filter(infoo => infoo.id !== id)
         console.log(searchAndDelete, "🇨🇩")
         this.setState(
@@ -240,8 +307,7 @@ class App extends Component {
             allInfo: searchAndDelete
         });
       });
-  };
-
+    };
 
   // componentWillMount() {
   //   this.removeInfo();
@@ -267,6 +333,7 @@ class App extends Component {
                     name={info.name}
                     grade={info.grade}
                     removeStudent={this.removeInfo}
+                    editStudent={() => this.setState({selectStudent:info})}
                   />
                 )
               })
@@ -276,6 +343,8 @@ class App extends Component {
         <div className="form">
           <AddListItem
             addStudent={this.addInfo}
+            selectStudent={this.state.selectStudent}
+            editStudentInfo= {this.editInfo}
           />
         </div>
       </div>

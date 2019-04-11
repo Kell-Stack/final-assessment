@@ -65,20 +65,20 @@ app.post('/getall/', async (req, res) => {
 // ###################################### PUT ######################################
 app.put('/getall/:id', async (req, res) => {
     const client = await pool.connect();
-    var updateInfo = client.query(function (infoFunc) {
-        return req.params.id == infoFunc.id;
-    });
+    // var updateInfo = client.query(function (infoFunc) {
+    //     return req.params.id == infoFunc.id;
+    // });
 
-    updateInfo.name = req.params.name;
-    updateInfo.grade = req.params.city;
-    res.json(oldInfo);
+    // updateInfo.name = req.params.name;
+    // updateInfo.grade = req.params.city;
+    // res.json(oldInfo);
 
-    var found = await client.query('SELECT * FROM example WHERE id=$1', [
-        req.params.id
-    ]);
-    await client.query('UPDATE example SET name = ($1),grade = ($2) WHERE id = ($3)', [req.body.name, req.body.grade]);
-
-
+    // var found = await client.query('SELECT * FROM example WHERE id=($1)', [
+    //     req.params.id
+    // ]);
+    let result = await client.query('UPDATE example SET name = ($1),grade = ($2) WHERE id = ($3) RETURNING *', [req.body.name, req.body.grade, req.params.id]);
+    res.json(result.rows[0])
+    client.release();
 });
 
 // ###################################### DELETE ######################################
