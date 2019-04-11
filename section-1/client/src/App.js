@@ -118,6 +118,7 @@ class App extends Component {
       name,
       grade
     }
+    console.log(body, '⛔️')
     const id = null
 
     fetch('/getall/', {

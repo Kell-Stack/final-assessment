@@ -47,15 +47,16 @@ app.post('/getall/', async (req, res) => {
     [req.body.name, req.body.grade],
         function (err, result) {
             if (err) {
-                res.status(500).send('sERver Unavailable')
+                res.status(500).send('sERver Unavailable💔')
+                console.log("error - server is unavailble", err)
             }
             else {
                 // console.log("you did it you did it")
                 // console.log(result.rows[0]);
                 res.status(201).json(result.rows[0]);
             }
+        client.release();
     });
-    client.release();
     // console.log(req.body)
     // res.json([req.body])
 })
