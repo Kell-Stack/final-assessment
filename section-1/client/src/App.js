@@ -23,22 +23,22 @@ const DataListItem = (props) => {
   return(
     <div className="ud-buttons">
       <li>
-        <span className="name">Name: {props.name}</span>
-        <span className="grade">Grade: {props.grade}</span>
+        <span className="fname">First: {props.firstname} </span>
+        <span className="lname">Last: {props.lastname} </span>
       </li>
           <Button
           onClick={() => props.removeStudent(props.id)}
           disabled={isLoading}
 
           >
-          {isLoading ? "✖" : "✖✖✖✖✖✖"}
+          {isLoading ? "⭕️" : "❌"}
           </Button>
           <Button
           onClick={() => props.editStudent(props.id)}
           disabled={isLoading}
 
           >
-          {isLoading ? "✏️" : "📝"}
+          {isLoading ? "📝" : "✏️"}
           </Button>
     </div>
   )
@@ -48,11 +48,11 @@ class AddListItem extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
-        name: "",
-        grade: ""
+        first: "",
+        last: ""
       }
-      this.handleNameChange = this.handleNameChange.bind(this)
-      this.handleGradeChange = this.handleGradeChange.bind(this)
+      this.handleFirstNameChange = this.handleFirstNameChange.bind(this)
+      this.handleLastNameChange = this.handleLastNameChange.bind(this)
       this.handleEdit = this.handleEdit.bind(this)
       this.handleSubmit = this.handleSubmit.bind(this)
     }
@@ -63,16 +63,16 @@ class AddListItem extends React.Component {
       }
     }
 
-    handleNameChange = (e) => {
+    handleFirstNameChange = (e) => {
       // console.log(this.state.name)
       this.setState({
-        name: e.target.value
+        firstname: e.target.value
       })
     }
 
-    handleGradeChange = (e) => {
+    handleLastNameChange = (e) => {
       this.setState({
-        grade: e.target.value
+        lastname: e.target.value
       })
     }
 
@@ -81,19 +81,19 @@ class AddListItem extends React.Component {
 
       if (this.state.id ) {
       this.props.editStudentInfo(
-        this.state.id, this.state.name, this.state.grade)
+        this.state.id, this.state.firstname, this.state.lastname)
 
       } else {
         this.props.addStudent(
-          this.state.name,
-          this.state.grade
+          this.state.firstname,
+          this.state.lastname
         )
       }
-      this.setState ({id:null, name:"", grade:""} )
+      this.setState ({id:null, firstname:"", lastname:""} )
     }
 
     handleEdit = () => {
-      this.props.editStudentInfo(this.state.id, this.state.name, this.state.grade)
+      this.props.editStudentInfo(this.state.id, this.state.firstname, this.state.lastname)
   }
 
     handleClick() {
@@ -110,13 +110,18 @@ class AddListItem extends React.Component {
     return (
       <form onSubmit={this.handleSubmit}>
         <label>
-          Name:
-          <input value={this.state.name} onChange={this.handleNameChange} />
+            Add Apprentice
+        <br/>
         </label>
 
         <label>
-          Grade:
-          <input value={this.state.grade} onChange={this.handleGradeChange} />
+          First Name:
+          <input value={this.state.firstname} onChange={this.handleFirstNameChange} />
+        </label>
+
+        <label>
+          Last Name:
+          <input value={this.state.lastname} onChange={this.handleLastNameChange} />
         </label>
 
         <input type="submit" value="Submit" />
@@ -138,11 +143,11 @@ class App extends Component {
     }
   };
 
-  addInfo = (name, grade) => {
-    console.log(name)
+  addInfo = (first, last) => {
+    console.log(first,last)
     const body = {
-      name,
-      grade
+      first,
+      last
     }
     console.log(body, '⛔️')
     const id = null
@@ -165,7 +170,7 @@ class App extends Component {
             })
           } else {
             let err = {
-              errorMessage: 'Be sure you are adding CHARACTERS in the Name field and NUMBERS in the Grade field'
+              errorMessage: 'Be sure you are adding CHARACTERS in the Name field'
             };
             throw err;
           }
@@ -183,8 +188,8 @@ class App extends Component {
         ...this.state.allInfo,
         {
           id: id,
-          name: name,
-          grade: grade
+          first: first,
+          last: last
         }
       ]
     })
@@ -213,7 +218,7 @@ class App extends Component {
             throw err;
           }
         }
-        return resp.json();
+      return resp.json();
       })
 
       .then(allInfo => {
@@ -227,7 +232,7 @@ class App extends Component {
     this.loadAll();
   }
 
-  editInfo = (id,name,grade) => {
+  editInfo = (id,first,last) => {
       let updateInf = API + id;
       console.log("✏️update ✏️", updateInf)
 
@@ -236,7 +241,7 @@ class App extends Component {
           headers: {
             "content-type": "application/json"
           },
-          body: JSON.stringify({name, grade})
+          body: JSON.stringify({first, last})
         })
         .then(resp => {
           if (!resp.ok) {
@@ -301,7 +306,7 @@ class App extends Component {
       })
       .then(() => {
         let searchAndDelete = this.state.allInfo.filter(infoo => infoo.id !== id)
-        console.log(searchAndDelete, "🇨🇩")
+        console.log(searchAndDelete, "🔆")
         this.setState(
           {
             allInfo: searchAndDelete
@@ -318,7 +323,7 @@ class App extends Component {
       <div>
         <div className ="App">
           <Header
-            title = "Final Assessment"
+            title = "Techtonica Apprentices & Cohorts"
           />
         </div>
 
@@ -329,9 +334,10 @@ class App extends Component {
                 return(
                   <DataListItem
                     key={info.id}
-                    id={info.id}
-                    name={info.name}
-                    grade={info.grade}
+                    idA={info.apprentice_id}
+                    idC={info.cohort_id}
+                    firstname={info.first}
+                    lastname={info.last}
                     removeStudent={this.removeInfo}
                     editStudent={() => this.setState({selectStudent:info})}
                   />

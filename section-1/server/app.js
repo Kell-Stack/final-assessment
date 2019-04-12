@@ -8,29 +8,48 @@ const {
 } = require('pg')
 var pool = new Pool({
     host: 'localhost',
-    database: 'final_assessment'
+    database: 'final'
 })
 
 const PORT = process.env.PORT || 3005
-app.listen(PORT, console.log(`Server is deadass in port ${PORT}👾`))
+app.listen(PORT, console.log(`Server is in port ${PORT}👾`))
 
 // ###################################### GET ######################################
-app.get('/', async (req, res) => {
-    res.send("Hey Kelly Girl. You made an API")
-});
-
-
-app.get('/getall/', async (req, res) => {
+app.get('/getall', async (req, res) => {
     const client = await pool.connect();
-    var example = await client.query('SELECT * FROM example');
+    var showAll = await client.query('SELECT * FROM apprentices, cohorts');
     client.release()
-    res.json(example.rows);
+    res.json(showAll.rows);
 });
 
 
-app.get('/getall/:id', async (req, res) => {
+app.get('/getallapprentices/', async (req, res) => {
     const client = await pool.connect();
-    var findById = await client.query('SELECT * FROM example WHERE id=($1)', [
+    var showAllApprentices = await client.query('SELECT * FROM apprentices');
+    client.release()
+    res.json(showAllApprentices.rows);
+});
+
+app.get('/getallcohorts/', async (req, res) => {
+    const client = await pool.connect();
+    var showAllCohorts= await client.query('SELECT * FROM cohorts');
+    client.release()
+    res.json(showAllCohorts.rows);
+});
+
+
+app.get('/getallapprentices/:id', async (req, res) => {
+    const client = await pool.connect();
+    var findById = await client.query('SELECT * FROM apprentices WHERE apprentice_id=($1)', [
+        req.params.id
+    ]);
+    res.json(findById.rows[0]);
+    client.release();
+});
+
+app.get('/getallcohorts/:id', async (req, res) => {
+    const client = await pool.connect();
+    var findById = await client.query('SELECT * FROM cohorts WHERE cohort_id=($1)', [
         req.params.id
     ]);
     res.json(findById.rows[0]);
@@ -39,19 +58,19 @@ app.get('/getall/:id', async (req, res) => {
 
 // ###################################### POST ######################################
 
-app.post('/getall/', async (req, res) => {
+app.post('/getallapprentices/', async (req, res) => {
     const client = await pool.connect();
-    // console.log("hey hey laaaaaaaa");
+    // console.log("⚠️");
     // console.log(req)
-    client.query('INSERT INTO example VALUES(default,($1), ($2)) RETURNING *',
-    [req.body.name, req.body.grade],
+    client.query('INSERT INTO apprentices VALUES(default,($1), ($2), ($3), ($4)) RETURNING *',
+    [req.body.id, req.body.first, req.body.last, req.body.cohort_id],
         function (err, result) {
             if (err) {
                 res.status(500).send('sERver Unavailable💔')
                 console.log("error - server is unavailble", err)
             }
             else {
-                // console.log("you did it you did it")
+                // console.log("⚜️")
                 // console.log(result.rows[0]);
                 res.status(201).json(result.rows[0]);
             }
@@ -61,30 +80,53 @@ app.post('/getall/', async (req, res) => {
     // res.json([req.body])
 })
 
+app.post('/getallcohorts/', async (req, res) => {
+    const client = await pool.connect();
+    // console.log("🚸");
+    // console.log(req)
+    client.query('INSERT INTO cohorts VALUES(default,($1), ($3), ($4)) RETURNING *',
+    [req.body.cohort_id, req.body.city, req.body.startdate, req.body.enddate],
+        function (err, result) {
+            if (err) {
+                res.status(500).send('sERver Unavailable💔')
+                console.log("error - server is unavailble", err)
+            }
+            else {
+                // console.log("🔱")
+                // console.log(result.rows[0]);
+                res.status(201).json(result.rows[0]);
+            }
+        client.release();
+    });
+})
+
 
 // ###################################### PUT ######################################
-app.put('/getall/:id', async (req, res) => {
+app.put('/getallapprentices/:id', async (req, res) => {
     const client = await pool.connect();
-    // var updateInfo = client.query(function (infoFunc) {
-    //     return req.params.id == infoFunc.id;
-    // });
+    let result = await client.query('UPDATE apprentices SET first = ($1),last = ($2) cohort_id = ($3) WHERE apprentice_id = ($4) RETURNING *', [req.body.first, req.body.last, req.params.cohort_id, req.params.apprentice_id]);
+    res.json(result.rows[0])
+    client.release();
+});
 
-    // updateInfo.name = req.params.name;
-    // updateInfo.grade = req.params.city;
-    // res.json(oldInfo);
-
-    // var found = await client.query('SELECT * FROM example WHERE id=($1)', [
-    //     req.params.id
-    // ]);
-    let result = await client.query('UPDATE example SET name = ($1),grade = ($2) WHERE id = ($3) RETURNING *', [req.body.name, req.body.grade, req.params.id]);
+app.put('/getallcohorts/:id', async (req, res) => {
+    const client = await pool.connect();
+    let result = await client.query('UPDATE cohorts SET city = ($1),startdate = ($2), enddate = ($3) WHERE cohort_id = ($4) RETURNING *', [req.body.city, req.body.startdate, req.params.enddate, req.params.cohort_id]);
     res.json(result.rows[0])
     client.release();
 });
 
 // ###################################### DELETE ######################################
-app.delete('/getall/:id', async (req, res) => {
+app.delete('/getallapprentices/:id', async (req, res) => {
     const client = await pool.connect();
-    const delOne= await client.query('DELETE FROM example WHERE id=($1)', [req.params.id]);
+    const delOne= await client.query('DELETE FROM apprentices WHERE apprentice_id=($1)', [req.params.id]);
+    await client.release();
+    res.json(delOne.rows);
+});
+
+app.delete('/getallcohorts/:id', async (req, res) => {
+    const client = await pool.connect();
+    const delOne= await client.query('DELETE FROM cohorts WHERE cohort_id=($1)', [req.params.id]);
     await client.release();
     res.json(delOne.rows);
 });
